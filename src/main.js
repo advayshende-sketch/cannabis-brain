@@ -103,7 +103,7 @@ const markerGeo = new THREE.SphereGeometry(0.022, 24, 24);
 
 const loader = new GLTFLoader();
 loader.load(
-  '/models/brain.glb',
+  import.meta.env.BASE_URL + 'models/brain.glb',
   (gltf) => { setupModel(gltf.scene); document.getElementById('loader').style.display = 'none'; },
   undefined,
   (err) => {
