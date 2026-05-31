@@ -26,6 +26,42 @@ controls.enablePan = false;
 controls.minDistance = 0.6;
 controls.maxDistance = 8;
 
+// ---------------------------------------------------------------------------
+//  Custom cursor (follower ring + dot; reacts to hover / drag)
+// ---------------------------------------------------------------------------
+const cursorRing = document.getElementById('cursor-ring');
+const cursorDot = document.getElementById('cursor-dot');
+const cursorEnabled = matchMedia('(pointer: fine)').matches;
+let cursorMode = 'default';      // canvas-driven: default | grab | grabbing | marker
+let domHover = false;            // hovering an interactive DOM element
+const cursorPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+const ringPos = { x: cursorPos.x, y: cursorPos.y };
+
+function refreshCursor() {
+  const hover = domHover || cursorMode === 'marker';
+  cursorRing.classList.toggle('hover', hover);
+  cursorRing.classList.toggle('grabbing', !hover && cursorMode === 'grabbing');
+}
+
+if (cursorEnabled) {
+  document.body.classList.add('cursor-on');
+  window.addEventListener('mousemove', (e) => {
+    cursorPos.x = e.clientX;
+    cursorPos.y = e.clientY;
+    cursorDot.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+    const inter = !!e.target.closest('button, a, input, .sr-item');
+    if (inter !== domHover) { domHover = inter; refreshCursor(); }
+  });
+  document.addEventListener('mouseleave', () => {
+    cursorRing.classList.add('cursor-hidden');
+    cursorDot.classList.add('cursor-hidden');
+  });
+  document.addEventListener('mouseenter', () => {
+    cursorRing.classList.remove('cursor-hidden');
+    cursorDot.classList.remove('cursor-hidden');
+  });
+}
+
 // soft image-based lighting gives the brain a sculptural, studio-lit look,
 // layered on top of hemisphere fill so it stays bright everywhere
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -268,16 +304,18 @@ canvas.addEventListener('pointermove', (e) => {
   raycaster.setFromCamera(pointer, camera);
   const hit = raycaster.intersectObjects(markers, false);
   hovering = hit.length > 0;
-  canvas.style.cursor = hovering ? 'pointer' : 'grab';
+  cursorMode = hovering ? 'marker' : 'grab';
+  refreshCursor();
 });
 
-canvas.addEventListener('pointerdown', () => { if (!hovering) canvas.style.cursor = 'grabbing'; });
+canvas.addEventListener('pointerdown', () => { if (!hovering) { cursorMode = 'grabbing'; refreshCursor(); } });
 canvas.addEventListener('pointerup', (e) => {
   updatePointer(e);
   raycaster.setFromCamera(pointer, camera);
   const hit = raycaster.intersectObjects(markers, false);
   if (hit.length) selectRegion(hit[0].object.userData.region.id, false);
-  canvas.style.cursor = hovering ? 'pointer' : 'grab';
+  cursorMode = hovering ? 'marker' : 'grab';
+  refreshCursor();
 });
 
 // ---------------------------------------------------------------------------
@@ -346,15 +384,6 @@ document.getElementById('zoom-out').addEventListener('click', () => zoom(1.25));
 
 document.getElementById('info-toggle').addEventListener('click', () => {
   document.getElementById('info-card').classList.toggle('collapsed');
-});
-
-document.getElementById('screenshot-btn').addEventListener('click', () => {
-  renderer.render(scene, camera);
-  const url = renderer.domElement.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `brain-atlas-${selectedId || 'view'}.png`;
-  a.click();
 });
 
 document.getElementById('help-btn').addEventListener('click', () => {
@@ -446,6 +475,13 @@ function animate() {
   gCam.position.copy(dir.multiplyScalar(6));
   gCam.lookAt(0, 0, 0);
   gRenderer.render(gScene, gCam);
+
+  // smooth-follow cursor ring
+  if (cursorEnabled) {
+    ringPos.x += (cursorPos.x - ringPos.x) * 0.2;
+    ringPos.y += (cursorPos.y - ringPos.y) * 0.2;
+    cursorRing.style.transform = `translate3d(${ringPos.x}px, ${ringPos.y}px, 0)`;
+  }
 }
 animate();
 
