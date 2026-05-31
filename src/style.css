@@ -18,13 +18,18 @@ html, body {
   color: var(--ink);
   background:
     /* fine dot texture */
-    radial-gradient(circle at 1px 1px, rgba(60, 50, 40, 0.07) 1.1px, transparent 1.6px) 0 0 / 23px 23px,
+    radial-gradient(circle at 1px 1px, rgba(58, 48, 38, 0.09) 1.1px, transparent 1.6px) 0 0 / 22px 22px,
+    /* coarser secondary dots for a woven feel */
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 1.5px) 11px 11px / 44px 44px,
+    /* soft tonal mottling to break up the flatness */
+    radial-gradient(38% 48% at 22% 74%, rgba(255, 255, 255, 0.10), transparent 70%),
+    radial-gradient(44% 54% at 84% 24%, rgba(40, 33, 25, 0.11), transparent 72%),
     /* soft spotlight behind the brain */
-    radial-gradient(62% 74% at 62% 46%, rgba(255, 252, 245, 0.20), rgba(255, 255, 255, 0) 62%),
+    radial-gradient(60% 72% at 62% 46%, rgba(255, 252, 245, 0.22), rgba(255, 255, 255, 0) 62%),
     /* edge vignette for depth */
-    radial-gradient(132% 112% at 50% 42%, transparent 50%, rgba(38, 32, 26, 0.24) 100%),
+    radial-gradient(132% 112% at 50% 42%, transparent 46%, rgba(36, 30, 24, 0.30) 100%),
     /* warm-grey base */
-    radial-gradient(120% 120% at 60% 40%, #c3beb5 0%, #a8a39b 55%, #8d8984 100%);
+    radial-gradient(120% 120% at 60% 40%, #c4bfb6 0%, #a8a39b 54%, #8a8681 100%);
   background-attachment: fixed;
 }
 
@@ -33,7 +38,7 @@ html, body {
 /* grain overlay */
 .grain {
   position: fixed; inset: 0; pointer-events: none; z-index: 1;
-  opacity: 0.4; mix-blend-mode: soft-light;
+  opacity: 0.5; mix-blend-mode: soft-light;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
