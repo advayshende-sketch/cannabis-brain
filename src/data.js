@@ -11,7 +11,7 @@ export const REGIONS = [
     id: 'amygdala',
     name: 'Amygdala',
     fn: 'Emotional processing, fear, threat detection',
-    pos: [0.5, -0.25, 0.25],
+    pos: [0.52, -0.34, 0.40],
     general: 'Reduces fear/anxiety at low doses; high doses trigger anxiety and paranoia; alters emotional reactivity; may dampen consolidation of traumatic memories.',
     thc: 'Low doses reduce reactivity to threats; high doses overstimulate → heightened anxiety; disrupts fear-extinction learning.',
     cbd: 'Reduces activation to fear stimuli; promising for PTSD and anxiety treatment.'
@@ -20,7 +20,7 @@ export const REGIONS = [
     id: 'hippocampus',
     name: 'Hippocampus',
     fn: 'Memory, spatial navigation, learning',
-    pos: [0.45, -0.2, -0.1],
+    pos: [0.56, -0.24, -0.08],
     general: 'Disrupts new memory formation; impairs recall; chronic use may reduce volume; interferes with spatial learning.',
     thc: 'Binds densely to CB1 receptors; suppresses long-term potentiation (LTP); disrupts memory-encoding theta waves.',
     cbd: 'May protect neurons from THC damage; some evidence it promotes neurogenesis.'
@@ -29,7 +29,7 @@ export const REGIONS = [
     id: 'prefrontal-cortex',
     name: 'Prefrontal Cortex',
     fn: 'Executive function, decision-making, impulse control',
-    pos: [0.35, 0.45, 0.85],
+    pos: [0.40, 0.42, 0.84],
     general: 'Impairs working memory/concentration; reduces decision-making activity; distorts time perception; heavy adolescent use linked to long-term cognitive changes.',
     thc: 'Disrupts glutamate signaling; alters dopamine release via CB1; temporarily reduces blood flow.',
     cbd: 'May counteract THC-induced impairment; possibly neuroprotective here.'
@@ -38,7 +38,7 @@ export const REGIONS = [
     id: 'cerebellum',
     name: 'Cerebellum',
     fn: 'Motor coordination, balance, fine motor control',
-    pos: [0.1, -0.6, -0.7],
+    pos: [0.16, -0.58, -0.72],
     general: 'Impairs coordination, balance, reaction time; the characteristic "stoned" movement; impairs driving.',
     thc: 'Very dense CB1 receptors → strongly affected; disrupts sync with motor cortex; alters GABA/glutamate balance.',
     cbd: "Minimal impact alone; may slightly buffer THC's motor effects at high ratios."
@@ -47,7 +47,7 @@ export const REGIONS = [
     id: 'brain-stem',
     name: 'Brain Stem',
     fn: 'Breathing, heart rate, consciousness',
-    pos: [0.0, -0.7, 0.05],
+    pos: [0.0, -0.82, -0.05],
     general: "Unlike opioids, doesn't suppress breathing; very low CB1 density in life-critical areas; may reduce nausea; key to cannabis's high safety profile.",
     thc: 'Minimal effect on respiratory control; activates antiemetic pathways (useful in chemo); low receptor density makes fatal overdose essentially impossible.',
     cbd: 'Acts on serotonin receptors to reduce nausea; studied for antiemetic and anti-seizure effects.'
@@ -56,7 +56,7 @@ export const REGIONS = [
     id: 'thalamus',
     name: 'Thalamus',
     fn: 'Sensory relay, consciousness, alertness',
-    pos: [0.0, 0.05, 0.0],
+    pos: [0.18, 0.08, 0.0],
     general: 'Alters sensory processing (enhanced sounds/colors); disrupts filtering of irrelevant stimuli; altered time perception; heightened sensitivity to stimuli.',
     thc: 'Disrupts sensory gating; increases information flow → sensory amplification; alters thalamus–cortex synchrony.',
     cbd: 'May stabilize activity and reduce sensory overload; investigated for pain modulation.'
@@ -65,7 +65,7 @@ export const REGIONS = [
     id: 'hypothalamus',
     name: 'Hypothalamus',
     fn: 'Appetite, hormones, sleep, homeostasis',
-    pos: [0.0, -0.18, 0.18],
+    pos: [0.12, -0.22, 0.24],
     general: 'Stimulates appetite ("munchies"); activates ghrelin; alters REM sleep; heavy use can disrupt hormonal regulation.',
     thc: 'Activates CB1 on hunger neurons; overrides leptin satiety signals; used medically to stimulate appetite in wasting conditions.',
     cbd: 'May suppress appetite at certain doses; interacts with serotonin receptors affecting satiety.'
@@ -74,7 +74,7 @@ export const REGIONS = [
     id: 'basal-ganglia',
     name: 'Basal Ganglia',
     fn: 'Reward, habit formation, motor control',
-    pos: [0.32, 0.12, 0.15],
+    pos: [0.34, 0.18, 0.28],
     general: 'Central to reward and addiction potential; increases dopamine → euphoria; chronic use reduces dopamine sensitivity; linked to motivational deficits.',
     thc: 'Activates the mesolimbic dopamine pathway; reinforces reward signals → repeated use; alters habit-learning circuits.',
     cbd: 'Modulates dopamine without binding CB1 directly; may reduce addictive signaling.'

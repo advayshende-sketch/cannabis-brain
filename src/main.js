@@ -165,8 +165,10 @@ function placeMarkers() {
   REGIONS.forEach((region) => {
     const m = new THREE.Mesh(
       markerGeo,
-      new THREE.MeshBasicMaterial({ color: 0x2b2b2b })
+      // render on top of the brain so every region's dot stays visible & clickable
+      new THREE.MeshBasicMaterial({ color: 0x2b2b2b, depthTest: false, depthWrite: false })
     );
+    m.renderOrder = 999;
     m.position.set(
       region.pos[0] * halfSize.x * 1.04,
       region.pos[1] * halfSize.y * 1.04,
@@ -176,8 +178,9 @@ function placeMarkers() {
     // a faint halo ring
     const ring = new THREE.Mesh(
       new THREE.RingGeometry(0.028, 0.038, 28),
-      new THREE.MeshBasicMaterial({ color: 0x2b2b2b, side: THREE.DoubleSide, transparent: true, opacity: 0.35 })
+      new THREE.MeshBasicMaterial({ color: 0x2b2b2b, side: THREE.DoubleSide, transparent: true, opacity: 0.35, depthTest: false, depthWrite: false })
     );
+    ring.renderOrder = 999;
     ring.userData.isRing = true;
     m.add(ring);
     brainGroup.add(m);
