@@ -28,10 +28,17 @@ html, body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* ---------- page title ---------- */
+.page-title {
+  position: fixed; top: 30px; left: 56px; z-index: 5;
+  width: 380px; font-size: 26px; font-weight: 700; line-height: 1.12;
+  letter-spacing: -0.5px; color: var(--brown);
+}
+
 /* ---------- left column ---------- */
 .left-col {
-  position: fixed; top: 30px; left: 56px; z-index: 5;
-  width: 360px; max-height: calc(100vh - 60px);
+  position: fixed; top: 124px; left: 56px; z-index: 5;
+  width: 360px; max-height: calc(100vh - 150px);
   display: flex; flex-direction: column; gap: 18px;
 }
 
@@ -180,7 +187,8 @@ body.cursor-on .cursor-dot { display: block; }
   .right-controls { width: 240px; }
 }
 @media (max-width: 760px) {
-  .left-col { left: 16px; right: 16px; width: auto; top: 20px; }
+  .page-title { left: 16px; width: auto; right: 16px; font-size: 21px; }
+  .left-col { left: 16px; right: 16px; width: auto; top: 96px; }
   .right-controls { top: auto; bottom: 110px; right: 16px; }
   .orient-gizmo { display: none; }
   .info-title { font-size: 30px; }
