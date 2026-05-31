@@ -391,42 +391,6 @@ document.getElementById('help-btn').addEventListener('click', () => {
 });
 
 // ---------------------------------------------------------------------------
-//  Ask Neurotorium (local canned assistant)
-// ---------------------------------------------------------------------------
-const askPanel = document.getElementById('ask-panel');
-const askBody = document.getElementById('ask-body');
-function openAsk() {
-  askPanel.hidden = false;
-  if (!askBody.childElementCount) addAsk('bot', 'Hi! Ask me about any brain region — try “What does the hippocampus do?”');
-}
-document.getElementById('ask-bubble').addEventListener('click', openAsk);
-document.getElementById('ask-avatar').addEventListener('click', openAsk);
-document.getElementById('ask-close').addEventListener('click', () => (askPanel.hidden = true));
-function addAsk(who, text) {
-  const el = document.createElement('div');
-  el.className = `ask-msg ${who}`;
-  el.textContent = text;
-  askBody.appendChild(el);
-  askBody.scrollTop = askBody.scrollHeight;
-}
-document.getElementById('ask-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const input = document.getElementById('ask-input');
-  const q = input.value.trim();
-  if (!q) return;
-  addAsk('user', q);
-  input.value = '';
-  const match = REGIONS.find((r) =>
-    q.toLowerCase().includes(r.name.split(':').pop().trim().toLowerCase().split(' ')[0]) ||
-    r.name.toLowerCase().split(' ').some((w) => w.length > 4 && q.toLowerCase().includes(w))
-  );
-  setTimeout(() => {
-    if (match) { addAsk('bot', match.desc); selectRegion(match.id, true); }
-    else addAsk('bot', 'I focus on the regions in this atlas. Try asking about the prefrontal cortex, hippocampus, amygdala, cerebellum, thalamus or visual cortex.');
-  }, 350);
-});
-
-// ---------------------------------------------------------------------------
 //  Orientation gizmo (mini scene)
 // ---------------------------------------------------------------------------
 const gizmoCanvas = document.getElementById('gizmo-canvas');
