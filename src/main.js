@@ -258,7 +258,7 @@ function frameCamera() {
 // shift the rendered scene to the right so the brain clears the left info panel
 function applyViewOffset() {
   const w = window.innerWidth, h = window.innerHeight;
-  const shift = w > 760 ? w * 0.17 : 0; // px to push content right
+  const shift = w > 760 ? w * 0.10 : 0; // px to push content right
   camera.setViewOffset(w, h, -shift, 0, w, h);
 }
 
