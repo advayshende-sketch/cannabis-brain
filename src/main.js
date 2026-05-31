@@ -323,10 +323,20 @@ canvas.addEventListener('pointerup', (e) => {
 // ---------------------------------------------------------------------------
 function renderInfo(region) {
   document.getElementById('info-title').textContent = region.name;
-  document.getElementById('info-desc').textContent = region.desc;
-  const refs = region.refs.map((r) => `<li>${r}</li>`).join('');
-  document.getElementById('info-refs').innerHTML =
-    `<h4>References</h4><ol>${refs}</ol>`;
+  document.getElementById('info-sub').textContent = region.fn;
+  document.getElementById('info-sections').innerHTML = `
+    <div class="info-block">
+      <h4>General</h4>
+      <p>${region.general}</p>
+    </div>
+    <div class="info-block thc">
+      <h4>THC</h4>
+      <p>${region.thc}</p>
+    </div>
+    <div class="info-block cbd">
+      <h4>CBD</h4>
+      <p>${region.cbd}</p>
+    </div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -338,10 +348,10 @@ const searchResults = document.getElementById('search-results');
 function renderSearch(q) {
   const query = q.trim().toLowerCase();
   const list = query
-    ? REGIONS.filter((r) => r.name.toLowerCase().includes(query) || r.group.toLowerCase().includes(query))
+    ? REGIONS.filter((r) => r.name.toLowerCase().includes(query) || r.fn.toLowerCase().includes(query))
     : REGIONS;
   searchResults.innerHTML = list
-    .map((r) => `<button class="sr-item" data-id="${r.id}"><span>${r.name}</span><small>${r.group}</small></button>`)
+    .map((r) => `<button class="sr-item" data-id="${r.id}"><span>${r.name}</span><small>${r.fn}</small></button>`)
     .join('') || '<div class="sr-empty">No matching area</div>';
   searchResults.classList.add('open');
 }
