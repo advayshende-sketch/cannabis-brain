@@ -107,8 +107,8 @@ let halfSize = new THREE.Vector3(1, 1, 1);
 const regionCenters = [];                          // [{ id, center: Vector3 }]
 const hiTarget = new THREE.Vector3(0, -9999, 0);   // where the highlight should sit
 const hiCurrent = new THREE.Vector3(0, -9999, 0);  // eased position (bound to shader)
-const hiColor = new THREE.Color(0xdca22f);         // warm amber/gold highlight
-const hiStrength = 0.9;
+const hiColor = new THREE.Color(0xd8920f);         // warm amber/gold highlight
+const hiStrength = 0.96;
 const highlightShaders = [];
 let hiInitialized = false;
 
@@ -154,7 +154,7 @@ function setupModel(root) {
     if (o.isMesh) {
       const mat = o.material && o.material.map
         ? o.material
-        : new THREE.MeshStandardMaterial({ color: 0xe9e6dd, roughness: 0.62, metalness: 0.0, envMapIntensity: 0.9 });
+        : new THREE.MeshStandardMaterial({ color: 0xe4e4e1, roughness: 0.62, metalness: 0.0, envMapIntensity: 0.9 });
       mat.side = THREE.DoubleSide;
       mat.flatShading = false;
       mat.clippingPlanes = [clipPlane];
@@ -208,13 +208,13 @@ function attachHighlight(mat) {
           '#include <color_fragment>',
           '#include <color_fragment>\n' +
           '  float _hd = distance(vHiPos, uHiCenter);\n' +
-          '  _hb = (1.0 - smoothstep(uHiRadius * 0.22, uHiRadius, _hd)) * uHiStrength;\n' +
+          '  _hb = (1.0 - smoothstep(uHiRadius * 0.5, uHiRadius, _hd)) * uHiStrength;\n' +
           '  diffuseColor.rgb = mix(diffuseColor.rgb, uHiColor, _hb);'
         )
         .replace(
           '#include <emissivemap_fragment>',
           '#include <emissivemap_fragment>\n' +
-          '  totalEmissiveRadiance += uHiColor * _hb * 0.28;' // soft glow so it pops
+          '  totalEmissiveRadiance += uHiColor * _hb * 0.4;' // soft glow so it pops
         );
     highlightShaders.push(shader);
   };
