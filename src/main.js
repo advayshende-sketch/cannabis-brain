@@ -98,10 +98,19 @@ const brainGroup = new THREE.Group();
 scene.add(brainGroup);
 
 let brainMaterials = [];
+const brainMeshes = [];
 let modelRadius = 1;
+let hiRadius = 1;
 let halfSize = new THREE.Vector3(1, 1, 1);
-const markers = [];
-const markerGeo = new THREE.SphereGeometry(0.022, 24, 24);
+
+// --- region highlight: a soft warm tint painted onto the brain surface ---
+const regionCenters = [];                          // [{ id, center: Vector3 }]
+const hiTarget = new THREE.Vector3(0, -9999, 0);   // where the highlight should sit
+const hiCurrent = new THREE.Vector3(0, -9999, 0);  // eased position (bound to shader)
+const hiColor = new THREE.Color(0xdca22f);         // warm amber/gold highlight
+const hiStrength = 0.9;
+const highlightShaders = [];
+let hiInitialized = false;
 
 const loader = new GLTFLoader();
 loader.load(
@@ -138,55 +147,77 @@ function setupModel(root) {
   box2.getSize(halfSize);
   halfSize.multiplyScalar(0.5);
   modelRadius = box2.getBoundingSphere(new THREE.Sphere()).radius;
+  hiRadius = modelRadius * 0.82; // size of the highlighted patch
 
-  // give the brain a soft anatomical material + register for clipping/opacity
+  // give the brain a soft anatomical material + region-highlight shader
   root.traverse((o) => {
     if (o.isMesh) {
       const mat = o.material && o.material.map
         ? o.material
-        : new THREE.MeshStandardMaterial({ color: 0xe7d9bf, roughness: 0.62, metalness: 0.0, envMapIntensity: 0.9 });
+        : new THREE.MeshStandardMaterial({ color: 0xe9e6dd, roughness: 0.62, metalness: 0.0, envMapIntensity: 0.9 });
       mat.side = THREE.DoubleSide;
       mat.flatShading = false;
       mat.clippingPlanes = [clipPlane];
       mat.clipShadows = true;
       mat.transparent = true;
       mat.opacity = 1;
+      attachHighlight(mat);
       o.material = mat;
       brainMaterials.push(mat);
+      brainMeshes.push(o);
     }
   });
 
-  placeMarkers();
+  computeRegionCenters();
   setView('sagittal', false);
   frameCamera();
   applyViewOffset();
 }
 
-function placeMarkers() {
+function computeRegionCenters() {
+  regionCenters.length = 0;
   REGIONS.forEach((region) => {
-    const m = new THREE.Mesh(
-      markerGeo,
-      // render on top of the brain so every region's dot stays visible & clickable
-      new THREE.MeshBasicMaterial({ color: 0x2b2b2b, depthTest: false, depthWrite: false })
-    );
-    m.renderOrder = 999;
-    m.position.set(
-      region.pos[0] * halfSize.x * 1.04,
-      region.pos[1] * halfSize.y * 1.04,
-      region.pos[2] * halfSize.z * 1.04
-    );
-    m.userData.region = region;
-    // a faint halo ring
-    const ring = new THREE.Mesh(
-      new THREE.RingGeometry(0.028, 0.038, 28),
-      new THREE.MeshBasicMaterial({ color: 0x2b2b2b, side: THREE.DoubleSide, transparent: true, opacity: 0.35, depthTest: false, depthWrite: false })
-    );
-    ring.renderOrder = 999;
-    ring.userData.isRing = true;
-    m.add(ring);
-    brainGroup.add(m);
-    markers.push(m);
+    regionCenters.push({
+      id: region.id,
+      center: new THREE.Vector3(
+        region.pos[0] * halfSize.x * 1.04,
+        region.pos[1] * halfSize.y * 1.04,
+        region.pos[2] * halfSize.z * 1.04
+      )
+    });
   });
+}
+
+// Inject a soft proximity tint into the brain's standard material: surface points
+// within `uHiRadius` of `uHiCenter` blend toward `uHiColor`, lit normally so the
+// gyri shading shows through. Driven from selectRegion() via shared uniforms.
+function attachHighlight(mat) {
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uHiCenter = { value: hiCurrent };
+    shader.uniforms.uHiColor = { value: hiColor };
+    shader.uniforms.uHiRadius = { value: hiRadius };
+    shader.uniforms.uHiStrength = { value: hiStrength };
+    shader.vertexShader = 'varying vec3 vHiPos;\n' + shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      '#include <begin_vertex>\n  vHiPos = (modelMatrix * vec4(transformed, 1.0)).xyz;'
+    );
+    shader.fragmentShader =
+      'uniform vec3 uHiCenter;\nuniform vec3 uHiColor;\nuniform float uHiRadius;\nuniform float uHiStrength;\nvarying vec3 vHiPos;\nfloat _hb;\n' +
+      shader.fragmentShader
+        .replace(
+          '#include <color_fragment>',
+          '#include <color_fragment>\n' +
+          '  float _hd = distance(vHiPos, uHiCenter);\n' +
+          '  _hb = (1.0 - smoothstep(uHiRadius * 0.22, uHiRadius, _hd)) * uHiStrength;\n' +
+          '  diffuseColor.rgb = mix(diffuseColor.rgb, uHiColor, _hb);'
+        )
+        .replace(
+          '#include <emissivemap_fragment>',
+          '#include <emissivemap_fragment>\n' +
+          '  totalEmissiveRadiance += uHiColor * _hb * 0.28;' // soft glow so it pops
+        );
+    highlightShaders.push(shader);
+  };
 }
 
 // procedural fallback: lumpy sphere that reads as a brain
@@ -223,12 +254,11 @@ function selectRegion(id, fly = true) {
   selectedId = id;
   if (history.replaceState) history.replaceState(null, '', `#${id}`);
   renderInfo(region);
-  markers.forEach((m) => {
-    const on = m.userData.region.id === id;
-    m.material.color.set(on ? 0xc0392b : 0x2b2b2b);
-    m.scale.setScalar(on ? 1.5 : 1);
-    m.children[0].material.opacity = on ? 0.6 : 0.35;
-  });
+  const rc = regionCenters.find((r) => r.id === id);
+  if (rc) {
+    hiTarget.copy(rc.center);
+    if (!hiInitialized) { hiCurrent.copy(hiTarget); hiInitialized = true; } // snap on first load
+  }
   if (fly) flyToMarker(region);
 }
 
@@ -306,8 +336,7 @@ function updatePointer(e) {
 canvas.addEventListener('pointermove', (e) => {
   updatePointer(e);
   raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObjects(markers, false);
-  hovering = hit.length > 0;
+  hovering = raycaster.intersectObjects(brainMeshes, false).length > 0;
   cursorMode = hovering ? 'marker' : 'grab';
   refreshCursor();
 });
@@ -316,8 +345,17 @@ canvas.addEventListener('pointerdown', () => { if (!hovering) { cursorMode = 'gr
 canvas.addEventListener('pointerup', (e) => {
   updatePointer(e);
   raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObjects(markers, false);
-  if (hit.length) selectRegion(hit[0].object.userData.region.id, false);
+  const hit = raycaster.intersectObjects(brainMeshes, false);
+  if (hit.length) {
+    // select the region whose centre is nearest the clicked surface point
+    const p = hit[0].point;
+    let best = null, bd = Infinity;
+    for (const rc of regionCenters) {
+      const d = rc.center.distanceTo(p);
+      if (d < bd) { bd = d; best = rc; }
+    }
+    if (best) selectRegion(best.id, false);
+  }
   cursorMode = hovering ? 'marker' : 'grab';
   refreshCursor();
 });
@@ -443,8 +481,12 @@ function animate() {
 
   controls.update();
 
-  // billboard the marker rings toward the camera
-  markers.forEach((m) => m.children[0].lookAt(camera.position));
+  // ease the region highlight toward its target & keep shader uniforms in sync
+  hiCurrent.lerp(hiTarget, 0.12);
+  for (const sh of highlightShaders) {
+    sh.uniforms.uHiRadius.value = hiRadius;
+    sh.uniforms.uHiStrength.value = hiStrength;
+  }
 
   renderer.render(scene, camera);
 
