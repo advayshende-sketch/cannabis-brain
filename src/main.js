@@ -112,11 +112,6 @@ const hiStrength = 0.96;
 const highlightShaders = [];
 let hiInitialized = false;
 
-// --- internal region structures, revealed when the cortex opacity is lowered ---
-const regionBlobs = [];
-const BLOB_PALETTE = [0xddc2c2, 0xc6d6c4, 0xddd0b6, 0xc9d0de, 0xd9c9d3, 0xd2d6c2, 0xddccb2, 0xc6d6d3];
-let blobGeo = null;
-
 const loader = new GLTFLoader();
 loader.load(
   import.meta.env.BASE_URL + 'models/brain.glb',
@@ -164,7 +159,7 @@ function setupModel(root) {
       mat.flatShading = false;
       mat.clippingPlanes = [clipPlane];
       mat.clipShadows = true;
-      mat.transparent = false; // opaque until the opacity slider lowers it
+      mat.transparent = true;
       mat.opacity = 1;
       attachHighlight(mat);
       o.material = mat;
@@ -174,11 +169,9 @@ function setupModel(root) {
   });
 
   computeRegionCenters();
-  createRegionBlobs();
   setView('sagittal', false);
   frameCamera();
   applyViewOffset();
-  applyOpacity();
 }
 
 function computeRegionCenters() {
@@ -192,39 +185,6 @@ function computeRegionCenters() {
         region.pos[2] * halfSize.z * 1.04
       )
     });
-  });
-}
-
-// Solid internal blobs at each region, set just inside the cortex. They stay
-// opaque while the cortex fades (see opacity slider), so the selected region's
-// gold glow is clearly visible even beneath the surface.
-function createRegionBlobs() {
-  blobGeo = new THREE.SphereGeometry(1, 28, 20);
-  REGIONS.forEach((region, i) => {
-    const baseColor = new THREE.Color(BLOB_PALETTE[i % BLOB_PALETTE.length]);
-    const mat = new THREE.MeshStandardMaterial({
-      color: baseColor, roughness: 0.5, metalness: 0.0, envMapIntensity: 0.5
-    });
-    const mesh = new THREE.Mesh(blobGeo, mat);
-    mesh.scale.setScalar(modelRadius * 0.072);
-    mesh.position.set(
-      region.pos[0] * halfSize.x * 0.82,
-      region.pos[1] * halfSize.y * 0.82,
-      region.pos[2] * halfSize.z * 0.82
-    );
-    brainGroup.add(mesh);
-    regionBlobs.push({ id: region.id, mesh, baseColor });
-  });
-}
-
-const BLACK = new THREE.Color(0x000000);
-function updateBlobs(id) {
-  regionBlobs.forEach((b) => {
-    const on = b.id === id;
-    b.mesh.material.color.copy(on ? hiColor : b.baseColor);
-    b.mesh.material.emissive.copy(on ? hiColor : BLACK);
-    b.mesh.material.emissiveIntensity = on ? 0.6 : 0;
-    b.mesh.scale.setScalar(modelRadius * (on ? 0.135 : 0.072));
   });
 }
 
@@ -299,7 +259,6 @@ function selectRegion(id, fly = true) {
     hiTarget.copy(rc.center);
     if (!hiInitialized) { hiCurrent.copy(hiTarget); hiInitialized = true; } // snap on first load
   }
-  updateBlobs(id);
   if (fly) flyToMarker(region);
 }
 
@@ -461,17 +420,10 @@ document.querySelectorAll('.view-btn').forEach((b) =>
 );
 
 document.getElementById('slider-slice').addEventListener('input', applySlice);
-function applyOpacity() {
-  const o = parseInt(document.getElementById('slider-opacity').value, 10) / 100;
-  brainMaterials.forEach((m) => {
-    m.opacity = o;
-    m.transparent = o < 0.999;
-    // stop the cortex writing depth once translucent, so the solid internal
-    // blobs behind it stay visible instead of being culled
-    m.depthWrite = o >= 0.999;
-  });
-}
-document.getElementById('slider-opacity').addEventListener('input', applyOpacity);
+document.getElementById('slider-opacity').addEventListener('input', (e) => {
+  const o = parseInt(e.target.value, 10) / 100;
+  brainMaterials.forEach((m) => { m.opacity = o; m.transparent = o < 1; });
+});
 
 function zoom(factor) {
   const dir = camera.position.clone().sub(controls.target);
@@ -529,14 +481,11 @@ function animate() {
 
   controls.update();
 
-  // ease the region highlight toward its target & keep shader uniforms in sync.
-  // fade the surface glow as the cortex turns translucent, so the internal blob
-  // becomes the indicator in the cutaway view.
+  // ease the region highlight toward its target & keep shader uniforms in sync
   hiCurrent.lerp(hiTarget, 0.12);
-  const cortexOpacity = brainMaterials.length ? brainMaterials[0].opacity : 1;
   for (const sh of highlightShaders) {
     sh.uniforms.uHiRadius.value = hiRadius;
-    sh.uniforms.uHiStrength.value = hiStrength * cortexOpacity;
+    sh.uniforms.uHiStrength.value = hiStrength;
   }
 
   renderer.render(scene, camera);
