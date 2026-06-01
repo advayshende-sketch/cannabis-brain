@@ -92,6 +92,8 @@ const VIEW_NORMALS = {
 // ---------------------------------------------------------------------------
 //  Brain model
 // ---------------------------------------------------------------------------
+const BRAIN_ROT_Y = 0; // Y-axis rotation to orient the model (front toward +Z)
+
 const brainGroup = new THREE.Group();
 scene.add(brainGroup);
 
@@ -126,10 +128,9 @@ function setupModel(root) {
   const wrap = new THREE.Group();
   wrap.add(root);
   wrap.scale.setScalar(scale);
-  // This model's longest (anterior-posterior) axis is its native X and width is Z.
-  // Rotate so front-back aligns with +Z and left-right with X — matching the
-  // anatomical convention used for markers and the sagittal/coronal/horizontal views.
-  wrap.rotation.y = -Math.PI / 2;
+  // The Blender brain export is already Y-up with front-back on +Z and
+  // left-right on X — matching the marker / view convention, so no rotation needed.
+  wrap.rotation.y = BRAIN_ROT_Y;
   brainGroup.add(wrap);
 
   // recompute bounds after scaling
@@ -251,10 +252,10 @@ function animateCamera(toPos, toTarget) {
 }
 
 function frameCamera() {
-  const d = modelRadius * 3.1;
+  const d = modelRadius * 3.5;
   // classic 3/4 lateral view (mostly along +X, the left-right axis)
   camera.position.set(d * 0.9, d * 0.16, d * 0.42);
-  controls.target.set(0, -modelRadius * 0.05, 0);
+  controls.target.set(0, -modelRadius * 0.12, 0);
   controls.update();
 }
 
